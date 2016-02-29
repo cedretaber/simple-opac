@@ -18,8 +18,8 @@ import entities.Book
 
 class Library extends Actor {
   import Library._
-  import NDLClient.QueryString
   import akka.pattern.{ask, pipe}
+  import NDLClient.QueryString
 
   override def receive = {
     case (SearchForm(None, None, None, _), _) => right(Seq.empty[Book])
@@ -60,12 +60,12 @@ object Library {
 
   object toQueryString extends Poly2 {
     implicit val caseString = at[String, Option[String]] {
-      case (k, Some(v)) => Some(s"$k=${URLEncoder.encode(v, "utf-8")}")
+      case (k, Some(v)) => Some(k -> v)
       case _ => None
     }
-    implicit val caseInt = at[String, Option[Cnt]] { (k, ov) => Some(s"$k=${ov.getOrElse(20)}") }
+    implicit val caseInt = at[String, Option[Cnt]] { (k, ov) => Some(k -> ov.getOrElse(20).toString) }
   }
 
   private[Library] def queryUrlBuilder(search: Search) =
-    searchFields.zipWith(Generic[Search].to(search))(toQueryString).toList.flatten.mkString("&")
+    searchFields.zipWith(Generic[Search].to(search))(toQueryString).toList.flatten
 }

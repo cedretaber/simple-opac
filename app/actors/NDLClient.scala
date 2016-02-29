@@ -14,8 +14,8 @@ class NDLClient @Inject()(wsc: WSClient, config: Configuration) extends Actor {
   import akka.pattern.pipe
 
   def receive = {
-    case QueryString(qs) => {
-      wsc.url(s"${ ndlOpenSearchUrl(config) }?$qs").get().map { res =>
+    case QueryString(queryString) => {
+      wsc.url(ndlOpenSearchUrl(config)).withQueryString(queryString:_*).get().map { res =>
         res.status match {
           case 200 => right(res.body)
           case _ => left(s"Connect failed.\n${res.body}")
@@ -28,5 +28,6 @@ class NDLClient @Inject()(wsc: WSClient, config: Configuration) extends Actor {
 object NDLClient {
   private[NDLClient] def ndlOpenSearchUrl(conf: Configuration) = conf.getString("settings.url.ndl.openSearch").get
 
-  case class QueryString(qs: String) extends AnyVal
+  // Seqそのままで受け取ると型消去でチェックが働かないので入れ物のcase classを作る
+  final case class QueryString(queryString: Seq[(String, String)])
 }
