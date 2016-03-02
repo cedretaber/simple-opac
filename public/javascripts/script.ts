@@ -77,7 +77,7 @@
                 method: "GET",
                 url: "/v1/books?" + (new Query(this.title(), this.author(), this._any(), this.count())).toQueryString()
             }).then((data: Array<any>)=>
-                this.list(data.map((book: any)=> new Book(book) ))
+                this.list(data.map((book: any)=> new Book(book)))
             );
             return false;
         }

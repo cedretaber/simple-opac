@@ -23,9 +23,7 @@ class Application @Inject()(system: ActorSystem,
   import scala.concurrent.duration._
   import actors.Library
 
-  def index = Action {
-    Ok(views.html.index("Simple OPAC"))
-  }
+  def index = Action(Ok(views.html.index("Simple OPAC")))
 
   val bookForm = Form(
     mapping(

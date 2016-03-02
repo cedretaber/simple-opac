@@ -1,7 +1,5 @@
 package actors
 
-import java.net.URLEncoder
-
 import akka.actor._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import shapeless._
@@ -63,7 +61,7 @@ object Library {
       case (k, Some(v)) => Some(k -> v)
       case _ => None
     }
-    implicit val caseInt = at[String, Option[Cnt]] { (k, ov) => Some(k -> ov.getOrElse(20).toString) }
+    implicit val caseCnt = at[String, Option[Cnt]] { (k, ov) => Some(k -> ov.getOrElse(20).toString) }
   }
 
   private[Library] def queryUrlBuilder(search: Search) =
