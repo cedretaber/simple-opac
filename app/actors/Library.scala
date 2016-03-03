@@ -4,7 +4,6 @@ import akka.actor._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import shapeless._
 import shapeless.syntax.std.traversable._
-
 import scala.concurrent.duration._
 import scala.languageFeature.postfixOps
 import scala.xml.XML

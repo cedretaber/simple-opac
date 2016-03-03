@@ -8,17 +8,18 @@ import forms.SearchForm
 import play.api._
 import play.api.data.Form
 import play.api.data.Forms._
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.Json
 import play.api.mvc._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import scalaz.\/.left
 import scalaz.{-\/, \/, \/-}
 
 @Singleton
 class Application @Inject()(system: ActorSystem,
-                            @Named("ndl-client-actor") ndlClient: ActorRef,
-                            implicit val ec: ExecutionContext) extends Controller {
+                            @Named("ndl-client-actor") ndlClient: ActorRef)
+  extends Controller {
   import akka.pattern.ask
   import scala.concurrent.duration._
   import actors.Library
