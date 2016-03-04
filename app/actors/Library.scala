@@ -4,6 +4,8 @@ import akka.actor._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import shapeless._
 import shapeless.syntax.std.traversable._
+import shapeless.tag
+import shapeless.tag.@@
 import scala.concurrent.duration._
 import scala.languageFeature.postfixOps
 import scala.xml.XML
@@ -37,16 +39,16 @@ object Library {
 
   lazy val genBook = Generic[Book]
 
-  case class Cnt(val n: Int) extends AnyVal { override def toString = n.toString }
+  case class Cnt()
 
   case class Search(title: Option[String],
                     creator: Option[String],
                     any: Option[String],
-                    cnt: Option[Cnt])
+                    cnt: Option[Int @@ Cnt])
 
   implicit def toSearch(form: SearchForm) = {
     import form._
-    Search(title, author, any, count.map(Cnt))
+    Search(title, author, any, count.map(tag[Cnt](_)))
   }
 
   private[this] def getFieldsStrings(klass: Class[_]) = klass.getDeclaredFields.map(_.getName)
@@ -60,7 +62,7 @@ object Library {
       case (k, Some(v)) => Some(k -> v)
       case _ => None
     }
-    implicit val caseCnt = at[String, Option[Cnt]] { (k, ov) => Some(k -> ov.getOrElse(20).toString) }
+    implicit val caseCnt = at[String, Option[Int @@ Cnt]] { (k, ov) => Some(k -> ov.getOrElse(20).toString) }
   }
 
   private[Library] def queryUrlBuilder(search: Search) =

@@ -14,14 +14,13 @@ class NDLClient @Inject()(wsc: WSClient, config: Configuration) extends Actor {
   import akka.pattern.pipe
 
   def receive = {
-    case QueryString(queryString) => {
+    case QueryString(queryString) =>
       wsc.url(ndlOpenSearchUrl(config)).withQueryString(queryString:_*).get().map { res =>
         res.status match {
           case 200 => right(res.body)
           case _ => left(s"Connect failed.\n${res.body}")
         }
       } pipeTo sender()
-    }
   }
 }
 
