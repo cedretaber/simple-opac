@@ -21,7 +21,7 @@ class Library extends Actor {
   import NDLClient.QueryString
 
   override def receive = {
-    case (SearchForm(None, None, None, _), _) => right(Seq.empty[Book])
+    case (SearchForm(None, None, None, _), _) => sender() ! right(Seq.empty[Book])
     case (search: SearchForm, ndlClient: ActorRef) => {
       ndlClient.ask(QueryString(queryUrlBuilder(search))).mapTo[\/[String, String]].map(_.map { body =>
         for {
