@@ -39,8 +39,7 @@ object Library {
 
   lazy val genBook = Generic[Book]
 
-  case class Cnt()
-
+  trait Cnt
   case class Search(title: Option[String],
                     creator: Option[String],
                     any: Option[String],
