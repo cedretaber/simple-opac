@@ -3,6 +3,8 @@ package actors
 import akka.actor._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import shapeless._
+import shapeless.record._
+import shapeless.ops.record.Keys
 import shapeless.syntax.std.traversable._
 import shapeless.tag
 import shapeless.tag.@@
@@ -38,6 +40,9 @@ object Library {
   implicit val timeout: akka.util.Timeout = 1 minute
 
   lazy val genBook = Generic[Book]
+  lazy val lgenBook = LabelledGeneric[Book]
+
+  lazy val lgenSearch = LabelledGeneric[Search]
 
   trait Cnt
   case class Search(title: Option[String],
@@ -50,11 +55,8 @@ object Library {
     Search(title, author, any, count.map(tag[Cnt](_)))
   }
 
-  private[this] def getFieldsStrings(klass: Class[_]) = klass.getDeclaredFields.map(_.getName)
-
-  type FourString = String::String::String::String::HNil
-  val searchFields = getFieldsStrings(classOf[Search]).toHList[FourString].get
-  val bookFields = getFieldsStrings(classOf[Book])
+  val searchFields = Keys[lgenSearch.Repr].apply.toList.map(_.name).toHList[String::String::String::String::HNil].get
+  val bookFields = Keys[lgenBook.Repr].apply.toList.map(_.name)
 
   object toQueryString extends Poly2 {
     implicit val caseString = at[String, Option[String]] {
@@ -65,5 +67,5 @@ object Library {
   }
 
   private[Library] def queryUrlBuilder(search: Search) =
-    searchFields.zipWith(Generic[Search].to(search))(toQueryString).toList.flatten
+    searchFields.zipWith(lgenSearch.to(search).values)(toQueryString).toList.flatten
 }
