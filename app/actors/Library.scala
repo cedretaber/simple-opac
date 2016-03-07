@@ -20,17 +20,17 @@ import entities.Book
 class Library extends Actor {
   import Library._
   import akka.pattern.{ask, pipe}
-  import NDLClient.QueryString
+  import NDLClient.{QueryString, NDLResponse}
 
   override def receive = {
-    case (SearchForm(None, None, None, _), _) => sender() ! right(Seq.empty[Book])
-    case (search: SearchForm, ndlClient: ActorRef) => {
-      ndlClient.ask(QueryString(queryUrlBuilder(search))).mapTo[\/[String, String]].map(_.map { body =>
+    case RequestBooks(SearchForm(None, None, None, _), _) => sender ! BookData(right(Seq.empty[Book]))
+    case RequestBooks(search, ndlClient) => {
+      ndlClient.ask(QueryString(queryUrlBuilder(search))).mapTo[NDLResponse].map { case NDLResponse(res) => res.map { body =>
         for {
           item <- XML.loadString(body) \\ "item"
           book <- bookFields.map { attr => (item \ attr).headOption.fold("")(_.text) }.toHList[genBook.Repr].map(genBook.from)
         } yield book
-      }) pipeTo sender()
+      } }.map(BookData) pipeTo sender
     }
   }
 }
@@ -43,6 +43,9 @@ object Library {
   lazy val lgenBook = LabelledGeneric[Book]
 
   lazy val lgenSearch = LabelledGeneric[Search]
+
+  case class RequestBooks(search: SearchForm, client: ActorRef)
+  case class BookData(books: \/[String, Seq[Book]])
 
   trait Cnt
   case class Search(title: Option[String],

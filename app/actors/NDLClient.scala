@@ -5,7 +5,7 @@ import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.ws.WSClient
-
+import scalaz.\/
 import scalaz.\/.{left, right}
 
 @Singleton
@@ -16,11 +16,11 @@ class NDLClient @Inject()(wsc: WSClient, config: Configuration) extends Actor {
   def receive = {
     case QueryString(queryString) =>
       wsc.url(ndlOpenSearchUrl(config)).withQueryString(queryString:_*).get().map { res =>
-        res.status match {
+        NDLResponse(res.status match {
           case 200 => right(res.body)
           case _ => left(s"Connect failed.\n${res.body}")
-        }
-      } pipeTo sender()
+        })
+      } pipeTo sender
   }
 }
 
@@ -29,4 +29,5 @@ object NDLClient {
 
   // Seqそのままで受け取ると型消去でチェックが働かないので入れ物のcase classを作る
   final case class QueryString(queryString: Seq[(String, String)])
+  final case class NDLResponse(response: \/[String, String])
 }
