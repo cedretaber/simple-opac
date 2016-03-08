@@ -3,8 +3,9 @@ package actors
 import akka.actor._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import shapeless._
+import shapeless.PolyDefns.->
 import shapeless.record._
-import shapeless.ops.record.Keys
+import shapeless.ops.record.{Keys, Fields}
 import shapeless.syntax.std.traversable._
 import shapeless.tag
 import shapeless.tag.@@
@@ -39,11 +40,6 @@ object Library {
   def props = Props[Library]
   implicit val timeout: akka.util.Timeout = 1 minute
 
-  lazy val genBook = Generic[Book]
-  lazy val lgenBook = LabelledGeneric[Book]
-
-  lazy val lgenSearch = LabelledGeneric[Search]
-
   case class RequestBooks(search: SearchForm, client: ActorRef)
   case class BookData(books: \/[String, Seq[Book]])
 
@@ -58,17 +54,23 @@ object Library {
     Search(title, author, any, count.map(tag[Cnt](_)))
   }
 
-  val searchFields = Keys[lgenSearch.Repr].apply.toList.map(_.name).toHList[String::String::String::String::HNil].get
+  lazy val genBook = Generic[Book]
+  lazy val lgenBook = LabelledGeneric[Book]
+
   val bookFields = Keys[lgenBook.Repr].apply.toList.map(_.name)
 
-  object toQueryString extends Poly2 {
-    implicit val caseString = at[String, Option[String]] {
-      case (k, Some(v)) => Some(k -> v)
+  lazy val lgenSearch = LabelledGeneric[Search]
+
+  object toQueryString extends Poly1 {
+    implicit def caseString[T <: Symbol] = at[(T, Option[String])] {
+      case (k, Some(v)) => Some(k.name -> v)
       case _ => None
     }
-    implicit val caseCnt = at[String, Option[Int @@ Cnt]] { (k, ov) => Some(k -> ov.getOrElse(20).toString) }
+    implicit def caseCnt[T <: Symbol] = at[(T, Option[Int @@ Cnt])] {
+      case (k, ov) => Some(k.name -> ov.getOrElse(20).toString)
+    }
   }
 
   private[Library] def queryUrlBuilder(search: Search) =
-    searchFields.zipWith(lgenSearch.to(search).values)(toQueryString).toList.flatten
+    Fields[lgenSearch.Repr].apply(lgenSearch to search).map(toQueryString).toList.flatten
 }

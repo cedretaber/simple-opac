@@ -49,7 +49,7 @@ class Application @Inject()(system: ActorSystem,
         case validForm => (try {
           libraryActor.ask(RequestBooks(validForm, ndlClient)).mapTo[BookData]
         } catch {
-          case e: Exception => Future.successful(BookData(left(s"Server Error: ${e.toString}")))
+          case e: Exception => Future.successful(BookData(left(s"Server Error: $e")))
         }).map {
           case BookData(\/-(books)) => Ok(Json.toJson(books))
           case BookData(-\/(msg)) => InternalServerError(msg)
