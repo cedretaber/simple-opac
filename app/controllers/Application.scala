@@ -1,6 +1,7 @@
 package controllers
 
 import akka.actor._
+import akka.pattern.AskTimeoutException
 import com.google.inject.name.Named
 import com.google.inject.{Inject, Singleton}
 import play.api._
@@ -47,12 +48,13 @@ class Application @Inject()(system: ActorSystem,
       },
       {
         case validForm => (try {
-          libraryActor.ask(RequestBooks(validForm, ndlClient)).mapTo[BookData]
+          libraryActor.ask(RequestBooks(validForm, ndlClient)).mapTo[BookData].map(_.books)
         } catch {
-          case e: Exception => Future.successful(BookData(left(s"Server Error: $e")))
+          case e: AskTimeoutException => Future.successful(left(s"Server Error: \n$e"))
+          case _ => Future.successful(left("Something wrong..."))
         }).map {
-          case BookData(\/-(books)) => Ok(Json.toJson(books))
-          case BookData(-\/(msg)) => InternalServerError(msg)
+          case \/-(books) => Ok(Json.toJson(books))
+          case -\/(msg) => InternalServerError(msg)
         }
       }
     )

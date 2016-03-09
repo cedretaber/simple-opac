@@ -29,5 +29,5 @@ object NDLClient {
 
   // Seqそのままで受け取ると型消去でチェックが働かないので入れ物のcase classを作る
   final case class QueryString(queryString: Seq[(String, String)])
-  final case class NDLResponse(response: \/[String, String])
+  final case class NDLResponse(response: String \/ String)
 }
