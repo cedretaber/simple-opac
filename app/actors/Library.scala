@@ -2,26 +2,25 @@ package actors
 
 import akka.actor._
 import akka.pattern.AskTimeoutException
+import entities.Book
+import forms.SearchForm
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import shapeless._
-import shapeless.ops.record.{Keys, Fields}
-import shapeless.syntax.std.traversable._
-import shapeless.tag
-import shapeless.tag.@@
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.languageFeature.postfixOps
 import scala.xml.XML
 import scalaz.\/
 import scalaz.\/.{left, right}
-
-import forms.SearchForm
-import entities.Book
+import shapeless._
+import shapeless.ops.record.{Keys, Fields}
+import shapeless.syntax.std.traversable._
+import shapeless.tag
+import shapeless.tag.@@
 
 class Library extends Actor {
   import Library._
   import akka.pattern.{ask, pipe}
-  import NDLClient.{QueryString, NDLResponse}
+  import NDLClient.QueryString
 
   override def receive = {
     case RequestBooks(SearchForm(None, None, None, _), _) => sender ! BookData(right(Seq.empty[Book]))
@@ -46,8 +45,9 @@ object Library {
   def props = Props[Library]
   implicit val timeout: akka.util.Timeout = 1 minute
 
-  case class RequestBooks(search: SearchForm, client: ActorRef)
-  case class BookData(books: String \/ Seq[Book])
+  final case class RequestBooks(search: SearchForm, client: ActorRef)
+  final case class BookData(books: String \/ Seq[Book])
+  final case class NDLResponse(response: String \/ String)
 
   trait Cnt
   case class Search(title: Option[String],
@@ -63,7 +63,7 @@ object Library {
   lazy val genBook = Generic[Book]
   lazy val lgenBook = LabelledGeneric[Book]
 
-  val bookFields = Keys[lgenBook.Repr].apply.toList.map(_.name)
+  lazy val bookFields = Keys[lgenBook.Repr].apply.toList.map(_.name)
 
   lazy val lgenSearch = LabelledGeneric[Search]
 

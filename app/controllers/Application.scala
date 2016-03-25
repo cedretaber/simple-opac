@@ -13,7 +13,6 @@ import play.api.mvc._
 import scala.concurrent.Future
 import scalaz.\/.left
 import scalaz.{-\/, \/-}
-
 import actors.Library
 import actors.Library.{RequestBooks, BookData}
 import entities.Book

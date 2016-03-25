@@ -1,5 +1,6 @@
 package actors
 
+import actors.Library.NDLResponse
 import akka.actor.Actor
 import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
@@ -27,7 +28,6 @@ class NDLClient @Inject()(wsc: WSClient, config: Configuration) extends Actor {
 object NDLClient {
   private[NDLClient] def ndlOpenSearchUrl(conf: Configuration) = conf.getString("settings.url.ndl.openSearch").get
 
-  // Seqそのままで受け取ると型消去でチェックが働かないので入れ物のcase classを作る
+  // Seqそのままで受け取ると型消去でチェックが働かないので注意
   final case class QueryString(queryString: Seq[(String, String)])
-  final case class NDLResponse(response: String \/ String)
 }
